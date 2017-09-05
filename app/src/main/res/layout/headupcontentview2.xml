@@ -1,31 +1,28 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="200dp"
-    android:background="#6f00"
+    android:layout_height="match_parent"
+    android:background="#60f0"
     android:orientation="vertical" >
 
     <TextView
         android:id="@+id/share_content"
-        android:text="xxxxxxxxxxxxxxxxx"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="25sp" />
+        android:textSize="40sp" />
 
     <TextView
-        android:id="@+id/share_facebook"
+        android:id="@+id/share_facebook_big"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="small"
-        android:textSize="20sp" />
+        android:text="headup"
+        android:textSize="30sp" />
 
     <TextView
-        android:id="@+id/share_twitter"
+        android:id="@+id/share_twitter_big"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:gravity="bottom"
-        android:paddingBottom="40dp"
-        android:text="small"
-        android:textSize="20sp" />
+        android:layout_height="wrap_content"
+        android:text="headup"
+        android:textSize="30sp" />
 
 </LinearLayout>

@@ -2,27 +2,38 @@
 package com.raintail.demonotification;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.drawable.shapes.OvalShape;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.os.UserHandle;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationCompat.Action;
 import android.support.v4.app.NotificationCompat.Builder;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class MainActivity extends Activity implements OnClickListener {
@@ -41,6 +52,8 @@ public class MainActivity extends Activity implements OnClickListener {
 
     private NotificationManager mNotificationManager;
     private Builder builder;
+
+    private ImageView ovaliv;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -77,6 +90,29 @@ public class MainActivity extends Activity implements OnClickListener {
 
         mNotificationManager = (NotificationManager) getSystemService(
                 Context.NOTIFICATION_SERVICE);
+
+
+        ovaliv = (ImageView) findViewById(R.id.ovaliv);
+        ovaliv.setImageBitmap(createGoogleBrowser());
+
+        findViewById(R.id.send_headup_notification).setOnClickListener(this);
+        findViewById(R.id.send_headup_notification3).setOnClickListener(this);
+
+        register();
+    }
+
+    int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+            | View.SYSTEM_UI_FLAG_FULLSCREEN
+            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+//        View decorView = getWindow().getDecorView();
+////        decorView.setSystemUiVisibility(uiOptions);
     }
 
     public void createBuilder(String ticker, String title, String content, int smallIcon
@@ -86,16 +122,18 @@ public class MainActivity extends Activity implements OnClickListener {
         builder.setContentTitle(title);
         builder.setContentText(content);
         builder.setColor(Color.DKGRAY);
-        builder.setSubText("subText测试测试");
+//        builder.setSubText("subText测试测试");
         builder.setSmallIcon(smallIcon);
+//        builder.setSmallIcon(R.drawable.ic_launcher);
         builder.setContentIntent(intent);
-        builder.setLargeIcon(
-                BitmapFactory.decodeResource(getResources(), R.drawable.help_ic_car_guide));
+//        builder.setLargeIcon(
+//                BitmapFactory.decodeResource(getResources(), R.drawable.help_ic_delete_p));
+        builder.setLargeIcon(createGoogleBrowser());
         builder.setWhen(System.currentTimeMillis());
-//        builder.setAutoCancel(true); // TODO
-        builder.setPriority(NotificationCompat.PRIORITY_MAX);
+        builder.setAutoCancel(true); // TODO
+//        builder.setPriority(NotificationCompat.PRIORITY_MAX);
         int defaults = 0;
-        if (sound) {
+        if (true) {
             defaults |= Notification.DEFAULT_SOUND;
         }
         if (vibrate) {
@@ -106,10 +144,11 @@ public class MainActivity extends Activity implements OnClickListener {
         }
         builder.setDefaults(defaults);
 //        builder.setOngoing(true); // TODO ？
+
     }
 
 
-    private void showCustomerNotification() {
+    private void showCustomerNotification(int flag) {
         PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this,
                 (int) SystemClock.uptimeMillis(), new Intent(MainActivity.this, TestActivity.class),
                 PendingIntent.FLAG_UPDATE_CURRENT);
@@ -126,20 +165,29 @@ public class MainActivity extends Activity implements OnClickListener {
         bigContentView.setOnClickPendingIntent(R.id.share_facebook_big, pendingIntent);
         bigContentView.setOnClickPendingIntent(R.id.share_twitter_big, pendingIntent);
 
-        // 加上这个才可以head up！！！！！！！
-        builder.setFullScreenIntent(pendingIntent, true);
-
-        RemoteViews headUpContentView = new RemoteViews(getPackageName(), R.layout.headupcontentview);
-        headUpContentView.setTextViewText(R.id.share_content, "自定义的headUp");
-        headUpContentView.setOnClickPendingIntent(R.id.share_facebook_big, pendingIntent);
-        headUpContentView.setOnClickPendingIntent(R.id.share_twitter_big, pendingIntent);
-
+        builder.setPriority(Notification.PRIORITY_HIGH);
+//
+//        builder.setFullScreenIntent(pendingIntent, true);
+//
         // TODO: 16-12-21  可以测试此处
         Notification notification = builder.build();
         notification.contentView = contentView;
-//        notification.bigContentView = bigContentView;
-        notification.headsUpContentView = headUpContentView;
-        send(8, notification);
+        notification.bigContentView = bigContentView;
+        if (flag == 19) {
+            RemoteViews headUpContentView = new RemoteViews(getPackageName(), R.layout.headupcontentview);
+            headUpContentView.setTextViewText(R.id.share_content, "自定义的headUp");
+            headUpContentView.setOnClickPendingIntent(R.id.share_facebook_big, pendingIntent);
+            headUpContentView.setOnClickPendingIntent(R.id.share_twitter_big, pendingIntent);
+            notification.headsUpContentView = headUpContentView;
+            notification.flags |= Notification.FLAG_NO_CLEAR;
+        } else if (flag == 3) {
+            RemoteViews headUpContentView = new RemoteViews(getPackageName(), R.layout.headupcontentview2);
+            headUpContentView.setTextViewText(R.id.share_content, "666773653653333");
+            headUpContentView.setOnClickPendingIntent(R.id.share_facebook_big, pendingIntent);
+            headUpContentView.setOnClickPendingIntent(R.id.share_twitter_big, pendingIntent);
+            notification.headsUpContentView = headUpContentView;
+        }
+        send(flag, notification);
     }
 
 
@@ -149,12 +197,21 @@ public class MainActivity extends Activity implements OnClickListener {
                 PendingIntent.FLAG_UPDATE_CURRENT);
         createBuilder("DefaultNotification", "普通通知", "DefaultNotification",
                 R.drawable.help_ic_car_guide, pendingIntent, false, false, false);
+        builder.setPriority(Notification.PRIORITY_MAX);
+//        builder.setPriority(NotificationCompat.PRIORITY_MAX);
+//        builder.setAutoCancel(false);
 //        builder.setFullScreenIntent(pendingIntent, true);
 //        builder.addAction(R.drawable.ic_launcher, "菜单1", pendingIntent);
+        builder.setAutoCancel(false);
+//        builder.setProgress(100, 60, false);
+        builder.setSubText("sub text"); // show in header, 老版本显示在title下方
+//        builder.setContentInfo("content info"); // < N 才会显示在header
+//        builder.setUsesChronometer(true); // 定时器，记录发送消息到现在的时长
         Notification notification = builder.build();
+//        notification.flags |= Notification.FLAG_NO_CLEAR;
         send(1, notification);
-        View view = View.inflate(this, R.layout.remoteview, null);
-        Log.i("licong10", view.getId() + "--end"); // it is -1
+//        View view = View.inflate(this, R.layout.remoteview, null);
+//        Log.i("licong10", view.getId() + "--end"); // it is -1
 
     }
 
@@ -176,6 +233,7 @@ public class MainActivity extends Activity implements OnClickListener {
                         "为此朴槿惠希望朝鲜方面可以尽快完成欧洲韩国财团在朝办事处的建设，" +
                         "并允许欧洲韩国财团相关人员可以自由访朝。")
                 .build();
+        notification.flags |= Notification.FLAG_NO_CLEAR;
         send(2, notification);
     }
 
@@ -190,6 +248,7 @@ public class MainActivity extends Activity implements OnClickListener {
                 R.drawable.weather_ic_notice_blue);
         Notification notification = new NotificationCompat.BigPictureStyle(builder)
                 .bigLargeIcon(bigLargeIcon).bigPicture(bigPicture).build();
+        notification.flags |= Notification.FLAG_NO_CLEAR;
         send(3, notification);
     }
 
@@ -212,6 +271,7 @@ public class MainActivity extends Activity implements OnClickListener {
         style.setSummaryText(contents.size() + "条消息");
         style.setBigContentTitle("bigContentTitle");
         Notification notification = builder.build();
+        notification.flags |= Notification.FLAG_NO_CLEAR;
         send(4, notification);
     }
 
@@ -274,7 +334,7 @@ public class MainActivity extends Activity implements OnClickListener {
                 PendingIntent.FLAG_UPDATE_CURRENT);
         createBuilder("Media", "媒体通知", "showMediaNotification",
                 R.drawable.help_ic_car_guide, pendingIntent, false, false, false);
-        builder.setSubText("SubText");
+//        builder.setSubText("SubText");
         builder.addAction(
                 generateAction(android.R.drawable.ic_media_previous, "Previous", ACTION_PREVIOUS));
         builder.addAction(generateAction(android.R.drawable.ic_media_rew, "Rewind", ACTION_REWIND));
@@ -343,7 +403,7 @@ public class MainActivity extends Activity implements OnClickListener {
                 showMediaNotification();
                 break;
             case R.id.send_customer_notification:
-                showCustomerNotification();
+                showCustomerNotification(8);
                 break;
             case R.id.cancle_notification:
                 cancelNotification();
@@ -357,15 +417,23 @@ public class MainActivity extends Activity implements OnClickListener {
             case R.id.send_customer_chronoNotification:
                 showChronometerNotification();
                 break;
+            case R.id.send_headup_notification:
+//                showCustomerNotification(19);
+                showCustomerHeadUpNotification();
+//                ffSend();
+                break;
+            case R.id.send_headup_notification3:
+                showCustomerNotification(3);
+                break;
 
             default:
                 break;
         }
     }
 
+
     int flagNum = 10;
     Rect mRect;
-
 
     /**
      * clip 属性, 裁剪了显示区域
@@ -386,6 +454,137 @@ public class MainActivity extends Activity implements OnClickListener {
 
         Log.i(TAG, "" + view.getWidth() + ":" + view.getHeight());
 
+
+//        startActivity(new Intent(this, TestActivity.class));
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setTitle("title")
+                .setCancelable(true)
+                .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                            dialogM.dismiss();
+                    }
+                });
+        dialogM = builder.create();
+        WindowManager.LayoutParams layoutParams = dialogM.getWindow().getAttributes();
+        layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+
+        dialogM.show();
+        dialogM.getWindow().getDecorView().setSystemUiVisibility(uiOptions);
+
+        sendNotification.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    WindowManager.LayoutParams layoutParams = dialogM.getWindow().getAttributes();
+                    layoutParams.flags &= ~WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+                    getWindowManager().updateViewLayout(dialogM.getWindow().getDecorView(), layoutParams);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }, 3000);
+
+    }
+
+    AlertDialog dialogM;
+
+
+    private Bitmap createGoogleBrowser() {
+        OvalShape ovalShape = new OvalShape();
+        int value = (int) getResources().getDimension(R.dimen.notification_large_icon_width);
+        ovalShape.resize(value, value);
+        Paint paint = new Paint();
+        paint.setColor(0xff607d8b);
+
+        Bitmap localBitmap = Bitmap.createBitmap(value, value, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(localBitmap);
+        ovalShape.draw(canvas, paint);
+
+        canvas.drawBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.offline_pin),
+                value/ 2, value/ 2, null);
+        return localBitmap;
+    }
+
+    private void register() {
+        registerReceiver(new MyBroadCast(), new IntentFilter("com.android.licong.demo"));
+    }
+
+    private PendingIntent buildPendingIntent() {
+        final Intent intent = new Intent("com.android.licong.demo");
+//        intent.setClassName(getPackageName(), "com.raintail.demonotification.MyBroadCast");
+        return PendingIntent.getBroadcast(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    int count = 100;
+
+    private void showCustomerHeadUpNotification() {
+        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this,
+                (int) SystemClock.uptimeMillis(), new Intent(MainActivity.this, TestActivity.class),
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        createBuilder("Customer", "自定义通知", "showCustomerNotification",
+                R.drawable.help_ic_car_guide, pendingIntent, false, false, false);
+
+        RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.remoteview);
+        contentView.setTextViewText(R.id.share_content, "自定义的view");
+        contentView.setOnClickPendingIntent(R.id.share_facebook, pendingIntent);
+        contentView.setOnClickPendingIntent(R.id.share_twitter, pendingIntent);
+
+        RemoteViews bigContentView = new RemoteViews(getPackageName(), R.layout.bigcontentview);
+        bigContentView.setTextViewText(R.id.share_content, "自定义的bigView");
+        bigContentView.setOnClickPendingIntent(R.id.share_facebook_big, pendingIntent);
+        bigContentView.setOnClickPendingIntent(R.id.share_twitter_big, pendingIntent);
+
+        builder.setPriority(Notification.PRIORITY_MAX);
+//
+//        builder.setFullScreenIntent(pendingIntent, true);
+//
+        Notification notification = builder.build();
+        notification.contentView = contentView;
+        notification.bigContentView = bigContentView;
+        RemoteViews headUpContentView = new RemoteViews(getPackageName(), R.layout.headupcontentview);
+        headUpContentView.setTextViewText(R.id.share_content, "count: " + count);
+        headUpContentView.setOnClickPendingIntent(R.id.share_facebook_big, buildPendingIntent());
+        headUpContentView.setOnClickPendingIntent(R.id.share_twitter_big, buildPendingIntent());
+        notification.headsUpContentView = headUpContentView;
+//        notification.extras.putBoolean("showHeadUpAlways", true);
+        send(99, notification);
+
+        sendNotification.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                count++;
+                showCustomerHeadUpNotification();
+            }
+        }, 2500);
+
+    }
+
+    private void ffSend() {
+        RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.headupcontentview);
+        remoteViews.setTextViewText(R.id.share_content, "count: " + count);
+        remoteViews.setOnClickPendingIntent(R.id.share_facebook_big, buildPendingIntent());
+        remoteViews.setOnClickPendingIntent(R.id.share_twitter_big, buildPendingIntent());
+        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this,
+                (int) SystemClock.uptimeMillis(), new Intent(MainActivity.this, TestActivity.class),
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
+
+        Notification.Builder builder =  new Notification.Builder(this)
+                .setTicker("aa")
+                .setContentTitle("title")
+                .setContentText("content")
+                .setSmallIcon(R.drawable.help_ic_car_guide)
+                .setContentIntent(pendingIntent)
+                .setLargeIcon(createGoogleBrowser())
+                .setPriority(Notification.PRIORITY_MAX)
+                .setDefaults(Notification.DEFAULT_SOUND)
+                .setCustomContentView(remoteViews);
+        Notification notification = builder.build();
+        notification.contentView = remoteViews;
+        notification.bigContentView = remoteViews;
+        send(99, notification);
     }
 
 }

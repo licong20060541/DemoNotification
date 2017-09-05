@@ -71,11 +71,18 @@
         android:layout_marginTop="20dp"
         android:text="ad" />
     <Button
+        android:id="@+id/show_dialog"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:text="cc" />
 
+
+    <WebView
+        android:id="@+id/web_view"
+        android:layout_width="match_parent"
+        android:layout_height="400dp">
+    </WebView>
 
 
     <!--<FrameLayout-->
